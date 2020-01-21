@@ -56,7 +56,7 @@ return [
             'driver' => 'mysql',
             'host' => env('DB_HOST', 'localhost'),
             'port' => env('DB_PORT', '3306'),
-            'database' => 'livedb',
+            'database' => 'j_project',
             'username' => 'vortechron',
             'password' => 'vortechron',
             'charset' => 'utf8',

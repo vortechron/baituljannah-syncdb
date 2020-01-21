@@ -3,8 +3,9 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Contracts\Logging\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Contracts\Logging\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class SyncDB extends Command
@@ -14,7 +15,7 @@ class SyncDB extends Command
      *
      * @var string
      */
-    protected $signature = 'sync-db';
+    protected $signature = 'sync-db {--tables=}';
 
     /**
      * The console command description.
@@ -24,11 +25,6 @@ class SyncDB extends Command
     protected $description = 'Synchronize Database';
 
     protected $storage = 'sync-db.json';
-
-    // Make sure these tables exists in syncDatabaseConnection
-    protected $tablesToSync = [
-        'users', 'payments'
-    ];
 
     protected $liveDatabaseConnection = 'mysql';
     protected $syncDatabaseConnection = 'report';
@@ -51,7 +47,7 @@ class SyncDB extends Command
     public function handle()
     {
         $storage = [];
-        $tables = collect($this->tablesToSync);
+        $tables = collect(explode(',', $this->option('tables')));
 
         // File storage checker
         if (Storage::exists($this->storage)) {
@@ -65,6 +61,11 @@ class SyncDB extends Command
 
         // Begin synching
         $tables->each(function ($table) use ($liveDB, &$storage) {
+            if (! Schema::hasTable($table)) {
+                $this->error('Table '. $table .' not exists!');
+                return;
+            }
+
             $offsetStorageKey = $table . '_offset';
             $offset = isset($storage[$offsetStorageKey]) ? $storage[$offsetStorageKey] : 0;
             $rowCounter = 0;
